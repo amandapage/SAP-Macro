@@ -1,0 +1,142 @@
+Public cycle As Integer
+Public p As Integer
+Public usuario, password As String
+Public continue As Boolean
+
+
+Public Sub Connection_Test3()
+Set main = ThisWorkbook
+continue = False
+
+main.Worksheets("Sheet1").Range("B7").Value = ""
+main.Worksheets("Sheet1").Range("B11").Value = ""
+
+
+If main.Worksheets("Sheet1").Range("K2").Value = "" Or main.Worksheets("Sheet1").Range("K3").Value = "" Then
+    credentialsForm.Show
+Else
+    continue = True
+End If
+
+usuario = main.Worksheets("Sheet1").Range("K2").Value
+password = main.Worksheets("Sheet1").Range("K3").Value
+
+If continue = False Then GoTo 0
+
+Dim App, Connection, session  As Object
+Dim sap_app, Conn As String
+Dim newHour, newMinute, newSecond As Integer
+Dim waitTime As Date
+Dim Flag As Boolean
+Dim i, error_cnt As Integer
+Dim SapGuiAuto As Object
+Dim usuario_activo As String
+usuario_activo = Environ("USERNAME")
+ 
+
+On Error GoTo errorHandling
+sap_app = "C:\Program Files (x86)\SAP\FrontEnd\SAPgui\saplogon.exe"
+Shell (sap_app)
+
+
+newHour = Hour(Now())
+newMinute = Minute(Now())
+newSecond = Second(Now()) + 3
+waitTime = TimeSerial(newHour, newMinute, newSecond)
+
+
+Application.Wait waitTime
+   
+Set SapGuiAuto = GetObject("SAPGUI")
+Set App = SapGuiAuto.GetScriptingEngine
+Set Connection = App.Children(0)
+Set session = Connection.Children(0)
+
+ 
+1
+
+orderNum = main.Worksheets("Sheet1").Range("B4").Value
+midGen3 = main.Worksheets("Sheet1").Range("B5").Value
+descGen3 = main.Worksheets("Sheet1").Range("B6").Value
+midGen4 = main.Worksheets("Sheet1").Range("B9").Value
+descGen4 = main.Worksheets("Sheet1").Range("B10").Value
+carPos = 4 + Len(y)
+ 
+session.findById("wnd[0]").maximize
+session.findById("wnd[0]/tbar[0]/okcd").Text = "/nco03"
+session.findById("wnd[0]").sendVKey 0
+session.findById("wnd[0]/usr/ctxtCAUFVD-AUFNR").Text = CStr(orderNum)
+session.findById("wnd[0]").sendVKey 0
+session.findById("wnd[0]/tbar[1]/btn[6]").press
+session.findById("wnd[0]").sendVKey 71
+session.findById("wnd[1]/usr/ctxtRCOSU-MATNR").Text = CStr(midGen3)
+session.findById("wnd[1]/usr/ctxtRCOSU-MATNR").SetFocus
+session.findById("wnd[1]/usr/ctxtRCOSU-MATNR").caretPosition = 4
+session.findById("wnd[1]").sendVKey 0
+session.findById("wnd[0]/usr/tblSAPLCOMKTCTRL_0120/ctxtRESBD-MATNR[1,0]").caretPosition = carPos
+If session.ActiveWindow.Name = "wnd[2]" Then
+    session.findById("wnd[2]/tbar[0]/btn[0]").press
+    session.findById("wnd[0]").sendVKey 71
+    session.findById("wnd[1]/usr/ctxtRCOSU-MATNR").Text = CStr(midGen4)
+    session.findById("wnd[1]/usr/ctxtRCOSU-MATNR").SetFocus
+    session.findById("wnd[1]/usr/ctxtRCOSU-MATNR").caretPosition = 4
+    session.findById("wnd[1]").sendVKey 0
+    session.findById("wnd[0]/usr/tblSAPLCOMKTCTRL_0120/ctxtRESBD-MATNR[1,0]").caretPosition = carPos
+    If session.ActiveWindow.Name = "wnd[2]" Then
+        UnknownGen.Show
+        GoTo 0
+    End If
+    session.findById("wnd[0]").sendVKey 2
+    descFound4 = session.findById("wnd[0]/usr/tabsTABSPR1/tabpSP12/ssubTABFRA1:SAPLMGMM:2000/subSUB1:SAPLMGD1:1001/txtMAKT-MAKTX").Text
+    session.findById("wnd[0]/usr/tabsTABSPR1/tabpSP12/ssubTABFRA1:SAPLMGMM:2000/subSUB1:SAPLMGD1:1001/txtMAKT-MAKTX").caretPosition = 13
+    'Put the material description in the "desc" box on the workbook
+    main.Worksheets("Sheet1").Range("B11").Value = descFound4
+    If descGen4 = descFound4 Then
+        SC4.Show
+        GoTo 0
+    End If
+    
+End If
+
+session.findById("wnd[0]").sendVKey 2
+descFound3 = session.findById("wnd[0]/usr/tabsTABSPR1/tabpSP12/ssubTABFRA1:SAPLMGMM:2000/subSUB1:SAPLMGD1:1001/txtMAKT-MAKTX").Text
+session.findById("wnd[0]/usr/tabsTABSPR1/tabpSP12/ssubTABFRA1:SAPLMGMM:2000/subSUB1:SAPLMGD1:1001/txtMAKT-MAKTX").caretPosition = 13
+'Put the material description in the "desc" box on the workbook
+main.Worksheets("Sheet1").Range("B7").Value = descFound3
+
+If descGen3 = descFound3 Then
+    SC3.Show
+End If
+
+0
+
+Exit Sub
+
+
+errorHandling:
+   Select Case Err.Number
+      Case 614
+        Set Connection = App.OpenConnection("-  CS1: ERP Production", True, False)
+        Set session = Connection.Children(0)
+        If usuario_activo <> "jg1068" Then
+            session.findById("wnd[0]").resizeWorkingPane 103, 24, False
+            session.findById("wnd[0]/usr/txtRSYST-BNAME").Text = usuario
+            session.findById("wnd[0]/usr/pwdRSYST-BCODE").Text = password
+            session.findById("wnd[0]/usr/pwdRSYST-BCODE").SetFocus
+            session.findById("wnd[0]").sendVKey 0
+        End If
+        Err.Clear
+        GoTo 1
+      Case 617
+            main.Worksheets("Sheet1").Range("D14").Value = "No entry found matching criteria entered"
+            GoTo 0
+            Err.Clear
+      Case 619
+        MsgBox ("This material has no valid data")
+      Case Else
+   End Select
+
+
+End Sub
+
+
